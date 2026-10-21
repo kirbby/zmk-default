@@ -1,6 +1,46 @@
 name: Build ZMK firmware
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches: [master]
+    # Preserve tag builds. GitHub does not apply path filters to tags.
+    tags: ['**']
+    paths:
+      - 'config/**'
+      - 'boards/**'
+      - 'zephyr/**'
+      - 'dts/**'
+      - 'include/**'
+      - 'src/**'
+      - 'snippets/**'
+      - 'build.yaml'
+      - 'west.yml'
+      - 'CMakeLists.txt'
+      - 'Kconfig*'
+      - '!**/*.md'
+      - '.github/workflows/build.yml'
+  pull_request:
+    paths:
+      - 'config/**'
+      - 'boards/**'
+      - 'zephyr/**'
+      - 'dts/**'
+      - 'include/**'
+      - 'src/**'
+      - 'snippets/**'
+      - 'build.yaml'
+      - 'west.yml'
+      - 'CMakeLists.txt'
+      - 'Kconfig*'
+      - '!**/*.md'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
 
+concurrency:
+  group: firmware-${{ github.workflow }}-${{ github.ref }}
+  # Never cancel tag runs; superseded branch/PR checks may be cancelled.
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+# Reusable workflow callers cannot set timeout-minutes. Upstream owns job limits.
 jobs:
   build:
     uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@main
